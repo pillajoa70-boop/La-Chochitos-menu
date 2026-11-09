@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA CHOCHITOS — Menú Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-amber-50/50 text-slate-800 pb-24">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-orange-600 via-amber-600 to-yellow-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-orange-600 font-black text-xl w-10 h-10 rounded-full flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-bowl-food"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-wide uppercase">LA CHOCHITOS</h1>
+                    <p class="text-xs text-amber-100">¡Sabor y tradición artesanal!</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="switchTab('menu')" id="btnTabMenu" class="px-3 py-1.5 rounded-full text-xs font-bold bg-white text-orange-600 shadow transition">
+                    <i class="fa-solid fa-utensils mr-1"></i> Menú
+                </button>
+                <button onclick="switchTab('cart')" id="btnTabCart" class="px-3 py-1.5 rounded-full text-xs font-bold bg-orange-700/60 text-white hover:bg-orange-700 transition relative">
+                    <i class="fa-solid fa-cart-shopping mr-1"></i> Pedido
+                    <span id="cartBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center hidden font-bold">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-3xl mx-auto px-4 mt-4">
+
+        <!-- MENU VIEW -->
+        <div id="viewMenu" class="space-y-6">
+            
+            <!-- Banner promocional / QR Modal trigger -->
+            <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-4 rounded-2xl shadow-md flex justify-between items-center">
+                <div>
+                    <h2 class="font-bold text-base">¡Haz tu pedido en línea!</h2>
+                    <p class="text-xs text-amber-100 mt-0.5">Arma tu orden y envíala directo a nuestro WhatsApp.</p>
+                </div>
+                <button onclick="openQrModal()" class="bg-white text-orange-700 px-3 py-2 rounded-xl text-xs font-bold shadow hover:bg-amber-50 transition flex items-center gap-1">
+                    <i class="fa-solid fa-qrcode text-sm"></i> Ver QR
+                </button>
+            </div>
+
+            <!-- Categorías de Navegación -->
+            <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <button onclick="filterCategory('all')" class="cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white whitespace-nowrap shadow-sm transition" data-cat="all">Todo</button>
+                <button onclick="filterCategory('cevichochos')" class="cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm transition" data-cat="cevichochos">🍲 Cevichochos</button>
+                <button onclick="filterCategory('bandejas')" class="cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm transition" data-cat="bandejas">🍍 Bandejas Ácidas</button>
+                <button onclick="filterCategory('bebidas')" class="cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm transition" data-cat="bebidas">🥤 Bebidas</button>
+            </div>
+
+            <!-- Lista de Productos -->
+            <div id="productList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Se inyecta por JS -->
+            </div>
+        </div>
+
+        <!-- CART / ORDER VIEW -->
+        <div id="viewCart" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-amber-100">
+                <h2 class="font-extrabold text-base text-slate-800 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-bag-shopping text-orange-600"></i> Tu Pedido Actual
+                </h2>
+                
+                <div id="cartItemsContainer" class="divide-y divide-slate-100 mb-4">
+                    <!-- Dinámico -->
+                </div>
+
+                <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-200/60 mb-4">
+                    <div class="flex justify-between text-sm font-bold text-slate-700">
+                        <span>Total a Pagar:</span>
+                        <span id="cartTotalText" class="text-orange-600 text-lg">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Datos del Cliente -->
+                <div class="space-y-3 pt-2 border-t border-slate-100">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-slate-500">Información de Entrega</h3>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tu Nombre:</label>
+                        <input type="text" id="clientName" placeholder="Ej. María Pérez" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 bg-slate-50/50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Servicio:</label>
+                        <select id="clientOrderType" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 bg-slate-50/50">
+                            <option value="Para Llevar">Para Llevar</option>
+                            <option value="Consumo en Local">Consumo en Local</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Notas adicionales (opcional):</label>
+                        <input type="text" id="clientNotes" placeholder="Ej. Sin cebolla, con extra limón..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 bg-slate-50/50">
+                    </div>
+
+                    <button onclick="sendToWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 mt-4 text-sm">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> Enviar Pedido por WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Personalización de Producto -->
+    <div id="productModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-3">
+                <div>
+                    <h3 id="modalTitle" class="font-extrabold text-base text-slate-800">Nombre Producto</h3>
+                    <p id="modalPrice" class="text-orange-600 font-bold text-sm">$0.00</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <p id="modalDesc" class="text-xs text-slate-500 mb-4 bg-amber-50 p-2.5 rounded-xl border border-amber-100"></p>
+
+            <div id="modalOptionsContainer" class="space-y-4 mb-5">
+                <!-- Opciones dinámicas según producto -->
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closeModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition">Cancelar</button>
+                <button onclick="confirmAddToCart()" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">Agregar al Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal QR Code -->
+    <div id="qrModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl text-center">
+            <h3 class="font-extrabold text-base text-slate-800 mb-1">¡Escanea el Menú!</h3>
+            <p class="text-xs text-slate-500 mb-4">Apunta tu cámara para abrir el menú en tu celular.</p>
+            
+            <div id="qrcodeDisplay" class="bg-white p-3 rounded-xl border border-slate-200 inline-block mb-4 shadow-inner"></div>
+
+            <button onclick="closeQrModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs transition">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Script de lógica de la aplicación -->
+    <script>
+        const products = [
+            // Cevichochos
+            { id: 'c1', cat: 'cevichochos', name: 'Cevichocho Pequeño', price: 1.00, desc: 'Incluye 1 opción de proteína (Pescado, Pollo, Cuero o Camarón).', type: 'ceviche', maxProt: 1 },
+            { id: 'c2', cat: 'cevichochos', name: 'Cevichocho Mediano', price: 1.50, desc: 'Incluye 2 opciones de proteína a elegir.', type: 'ceviche', maxProt: 2 },
+            { id: 'c3', cat: 'cevichochos', name: 'Cevichocho Grande', price: 2.00, desc: 'Incluye 3 opciones de proteína a elegir.', type: 'ceviche', maxProt: 3 },
+            
+            // Bandejas Ácidas y Especialidades
+            { id: 'b1', cat: 'bandejas', name: 'Pulpi Loco', price: 0.75, desc: 'Pulpín congelado con mango y 1 gomita.', type: 'simple' },
+            { id: 'b2', cat: 'bandejas', name: 'Bandeja Estudiantil', price: 1.00, desc: 'Mango, 1 gomita, 1 ovito y 1 helado de michelada.', type: 'simple' },
+            { id: 'b3', cat: 'bandejas', name: 'Piña y Sandía', price: 1.25, desc: 'Incluye 4 gomitas y queso enchilado.', type: 'simple' },
+            { id: 'b4', cat: 'bandejas', name: 'Bandeja Económica', price: 1.50, desc: 'Elige hasta 2 frutas de tu preferencia.', type: 'fruit_limit', limit: 2 },
+            { id: 'b5', cat: 'bandejas', name: 'Bandeja Familiar', price: 3.00, desc: 'Incluye TODAS las frutas (Piña, Manzana, Uva, Mango, Ovito, Sandía).', type: 'all_fruits' },
+            { id: 'b6', cat: 'bandejas', name: 'Bandeja Con Helado', price: 3.50, desc: 'Bandeja de frutas sin límite acompañada con helado.', type: 'all_fruits' },
+            { id: 'b7', cat: 'bandejas', name: 'Bandeja Especial', price: 5.00, desc: 'Cóctel con gomitas + exactamente 1 fruta a elección.', type: 'fruit_limit', limit: 1 },
+
+            // Bebidas
+            { id: 'd1', cat: 'bebidas', name: 'Mangonada', price: 2.50, desc: 'Granizado de mango con trozos de mango y perlas explosivas a tu elección.', type: 'mangonada' },
+            { id: 'd2', cat: 'bebidas', name: 'Bubble Soda', price: 2.50, desc: 'Refrescante soda burbujeante con perlas explosivas y máximo 1 fruta.', type: 'bubblesoda' }
+        ];
+
+        const availableProteins = ['Pescado', 'Pollo', 'Cuero', 'Camarón'];
+        const availableFruits = ['Piña', 'Manzana', 'Uva', 'Mango', 'Ovito', 'Sandía'];
+        const availablePearls = ['Manzana', 'Blueberry', 'Mango'];
+
+        let cart = [];
+        let currentModalProduct = null;
+
+        // Renderizar Productos
+        function renderProducts(category = 'all') {
+            const container = document.getElementById('productList');
+            container.innerHTML = '';
+
+            const filtered = category === 'all' ? products : products.filter(p => p.cat === category);
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="font-bold text-sm text-slate-800">${p.name}</h3>
+                            <span class="bg-amber-100 text-orange-700 text-xs font-black px-2 py-0.5 rounded-full">$${p.price.toFixed(2)}</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">${p.desc}</p>
+                    </div>
+                    <button onclick="openProductModal('${p.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-plus text-[10px]"></i> Elegir y Agregar
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterCategory(cat) {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if(btn.dataset.cat === cat) {
+                    btn.className = "cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white whitespace-nowrap shadow-sm transition";
+                } else {
+                    btn.className = "cat-btn px-4 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap shadow-sm transition";
+                }
+            });
+            renderProducts(cat);
+        }
+
+        // Modal de Configuración
+        function openProductModal(id) {
+            currentModalProduct = products.find(p => p.id === id);
+            document.getElementById('modalTitle').innerText = currentModalProduct.name;
+            document.getElementById('modalPrice').innerText = `$${currentModalProduct.price.toFixed(2)}`;
+            document.getElementById('modalDesc').innerText = currentModalProduct.desc;
+
+            const container = document.getElementById('modalOptionsContainer');
+            container.innerHTML = '';
+
+            if (currentModalProduct.type === 'ceviche') {
+                let html = `<label class="block text-xs font-bold text-slate-700 mb-1">Selecciona ${currentModalProduct.maxProt} proteína(s):</label><div class="space-y-1.5">`;
+                availableProteins.forEach((prot, idx) => {
+                    html += `
+                        <label class="flex items-center gap-2 text-xs text-slate-700 p-2 bg-slate-50 rounded-xl cursor-pointer">
+                            <input type="checkbox" name="protOption" value="${prot}" class="rounded text-orange-600 focus:ring-orange-500">
+                            ${prot}
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            } else if (currentModalProduct.type === 'fruit_limit') {
+                let html = `<label class="block text-xs font-bold text-slate-700 mb-1">Elige hasta ${currentModalProduct.limit} fruta(s):</label><div class="space-y-1.5">`;
+                availableFruits.forEach(fruit => {
+                    html += `
+                        <label class="flex items-center gap-2 text-xs text-slate-700 p-2 bg-slate-50 rounded-xl cursor-pointer">
+                            <input type="checkbox" name="fruitOption" value="${fruit}" class="rounded text-orange-600 focus:ring-orange-500">
+                            ${fruit}
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            } else if (currentModalProduct.type === 'mangonada') {
+                let html = `<label class="block text-xs font-bold text-slate-700 mb-1">Elige el sabor de perlas explosivas:</label><div class="space-y-1.5">`;
+                availablePearls.forEach(pearl => {
+                    html += `
+                        <label class="flex items-center gap-2 text-xs text-slate-700 p-2 bg-slate-50 rounded-xl cursor-pointer">
+                            <input type="radio" name="pearlOption" value="${pearl}" class="text-orange-600 focus:ring-orange-500" checked>
+                            Perlas de ${pearl}
+                        </label>
+                    `;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            } else if (currentModalProduct.type === 'bubblesoda') {
+                let html = `
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Elige 1 sola fruta:</label>
+                        <select id="bubbleFruit" class="w-full p-2 text-xs rounded-xl border border-slate-200 bg-slate-50">
+                            ${availableFruits.map(f => `<option value="${f}">${f}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Elige perlas explosivas:</label>
+                        <select id="bubblePearl" class="w-full p-2 text-xs rounded-xl border border-slate-200 bg-slate-50">
+                            ${availablePearls.map(p => `<option value="${p}">Perlas de ${p}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic">Este producto no requiere selecciones adicionales.</p>`;
+            }
+
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+
+        function confirmAddToCart() {
+            let details = [];
+
+            if (currentModalProduct.type === 'ceviche') {
+                const checkedProts = Array.from(document.querySelectorAll('input[name="protOption"]:checked')).map(el => el.value);
+                if (checkedProts.length === 0) {
+                    alert('Por favor selecciona al menos una proteína.');
+                    return;
+                }
+                if (checkedProts.length > currentModalProduct.maxProt) {
+                    alert(`Máximo puedes elegir ${currentModalProduct.maxProt} proteína(s) para este tamaño.`);
+                    return;
+                }
+                details.push(`Proteínas: ${checkedProts.join(', ')}`);
+            } else if (currentModalProduct.type === 'fruit_limit') {
+                const checkedFruits = Array.from(document.querySelectorAll('input[name="fruitOption"]:checked')).map(el => el.value);
+                if (checkedFruits.length === 0) {
+                    alert('Por favor selecciona al menos una fruta.');
+                    return;
+                }
+                if (checkedFruits.length > currentModalProduct.limit) {
+                    alert(`Solo puedes elegir un máximo de ${currentModalProduct.limit} fruta(s).`);
+                    return;
+                }
+                details.push(`Frutas: ${checkedFruits.join(', ')}`);
+            } else if (currentModalProduct.type === 'all_fruits') {
+                details.push(`Frutas: Todas (Piña, Manzana, Uva, Mango, Ovito, Sandía)`);
+            } else if (currentModalProduct.type === 'mangonada') {
+                const selectedPearl = document.querySelector('input[name="pearlOption"]:checked').value;
+                details.push(`Perlas: ${selectedPearl}`);
+            } else if (currentModalProduct.type === 'bubblesoda') {
+                const f = document.getElementById('bubbleFruit').value;
+                const p = document.getElementById('bubblePearl').value;
+                details.push(`Fruta: ${f} | Perlas: ${p}`);
+            }
+
+            cart.push({
+                name: currentModalProduct.name,
+                price: currentModalProduct.price,
+                details: details.join(' | ')
+            });
+
+            closeModal();
+            updateCartUI();
+            alert('¡Producto agregado al pedido!');
+        }
+
+        function updateCartUI() {
+            const badge = document.getElementById('cartBadge');
+            if (cart.length > 0) {
+                badge.innerText = cart.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            const container = document.getElementById('cartItemsContainer');
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Tu carrito está vacío.</p>`;
+                document.getElementById('cartTotalText').innerText = '$0.00';
+                return;
+            }
+
+            let total = 0;
+            cart.forEach((item, index) => {
+                total += item.price;
+                const div = document.createElement('div');
+                div.className = "py-2.5 flex justify-between items-center text-xs";
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold text-slate-800">${item.name}</p>
+                        <p class="text-slate-500 text-[11px]">${item.details}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-orange-600">$${item.price.toFixed(2)}</span>
+                        <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('cartTotalText').innerText = `$${total.toFixed(2)}`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function switchTab(tab) {
+            const viewMenu = document.getElementById('viewMenu');
+            const viewCart = document.getElementById('viewCart');
+            const btnMenu = document.getElementById('btnTabMenu');
+            const btnCart = document.getElementById('btnTabCart');
+
+            if (tab === 'menu') {
+                viewMenu.classList.remove('hidden');
+                viewCart.classList.add('hidden');
+                btnMenu.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-white text-orange-600 shadow transition";
+                btnCart.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-orange-700/60 text-white hover:bg-orange-700 transition relative";
+            } else {
+                viewMenu.classList.add('hidden');
+                viewCart.classList.remove('hidden');
+                btnCart.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-white text-orange-600 shadow transition";
+                btnMenu.className = "px-3 py-1.5 rounded-full text-xs font-bold bg-orange-700/60 text-white hover:bg-orange-700 transition relative";
+                updateCartUI();
+            }
+        }
+
+        function sendToWhatsApp() {
+            if (cart.length === 0) {
+                alert('Agrega al menos un producto a tu pedido.');
+                return;
+            }
+
+            const name = document.getElementById('clientName').value.trim();
+            if (!name) {
+                alert('Por favor ingresa tu nombre.');
+                return;
+            }
+
+            const orderType = document.getElementById('clientOrderType').value;
+            const notes = document.getElementById('clientNotes').value.trim();
+
+            let message = `*¡NUEVO PEDIDO - LA CHOCHITOS!* 🥣\n\n`;
+            message += `👤 *Cliente:* ${name}\n`;
+            message += `🛵 *Modalidad:* ${orderType}\n\n`;
+            message += `📋 *Detalle del pedido:*\n`;
+
+            let total = 0;
+            cart.forEach((item, i) => {
+                message += `${i + 1}. *${item.name}* ($${item.price.toFixed(2)})\n`;
+                if (item.details) message += `   ↳ _${item.details}_\n`;
+                total += item.price;
+            });
+
+            message += `\n💰 *TOTAL A PAGAR: $${total.toFixed(2)}*\n`;
+            if (notes) message += `\n💬 *Notas:* ${notes}`;
+
+            const phone = "593939617585";
+            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+
+        // QR Code Modal
+        function openQrModal() {
+            document.getElementById('qrModal').classList.remove('hidden');
+            const qrContainer = document.getElementById('qrcodeDisplay');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: window.location.href,
+                width: 150,
+                height: 150,
+                colorDark: "#c2410c",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function closeQrModal() {
+            document.getElementById('qrModal').classList.add('hidden');
+        }
+
+        // Inicializar
+        renderProducts('all');
+    </script>
+</body>
+</html>
